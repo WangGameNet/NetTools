@@ -1,0 +1,8 @@
+include "core",
+        "desktop",
+        "libGdx",
+        "libGdxLib",
+        "libGdxJnigenLoader",
+        "Server",
+        "Shared",
+        "Client"
