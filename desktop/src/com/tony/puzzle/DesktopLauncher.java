@@ -2,7 +2,7 @@ package com.tony.puzzle;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.tony.dominoes.DominoesGame;
+import com.tony.game.GameMain;
 import kw.test.file.Bean;
 import kw.test.file.ReadFileConfig;
 
@@ -22,6 +22,6 @@ public class DesktopLauncher {
         config.height = (int) (1280 * 0.5f);
         config.pauseWhenMinimized = true;
         config.pauseWhenBackground = true;
-        new LwjglApplication(new DominoesGame(), config);
+        new LwjglApplication(new GameMain(), config);
     }
 }

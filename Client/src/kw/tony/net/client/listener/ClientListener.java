@@ -3,6 +3,7 @@ package kw.tony.net.client.listener;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.kw.gdx.utils.log.NLog;
+import kw.tony.shared.constant.message.LoginMesssage;
 
 public class ClientListener implements Listener {
     @Override
@@ -20,7 +21,10 @@ public class ClientListener implements Listener {
     @Override
     public void received(Connection connection, Object object) {
         Listener.super.received(connection, object);
-        NLog.i("client====>  disconnected ");
+        NLog.i("client====>  received ");
+        if (object instanceof LoginMesssage){
+            System.out.println(object);
+        }
     }
 
     @Override
