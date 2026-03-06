@@ -16,6 +16,7 @@ public class ClientListener implements Listener {
     public void connected(Connection connection) {
         Listener.super.connected(connection);
         NLog.i("client====>  connected ");
+        networkService.onConnected();
     }
 
     @Override

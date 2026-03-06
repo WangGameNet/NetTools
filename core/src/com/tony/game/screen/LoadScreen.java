@@ -8,11 +8,11 @@ import com.kw.gdx.screen.BaseScreen;
 import kw.tony.net.client.NetworkEventSubscriber;
 import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
+import kw.tony.net.client.event.BallSnapshot;
+import kw.tony.net.client.event.InitialWorldStateEvent;
+import kw.tony.net.client.event.TestMessageEvent;
+import kw.tony.net.client.event.WorldSnapshotEvent;
 import kw.tony.shared.constant.Constant;
-import kw.tony.shared.constant.bean.BallInfo;
-import kw.tony.shared.constant.message.BallInitMessage;
-import kw.tony.shared.constant.message.TestMesssage;
-import kw.tony.shared.constant.message.WorldMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,30 +55,44 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     }
 
     @Override
-    public void onBallInitMessage(BallInitMessage ballInitMessage) {
+    public void onConnected() {
+    }
+
+    @Override
+    public void onDisconnected() {
         resetBallStates();
         lastSnapshotId = -1L;
-        for (BallInfo position : ballInitMessage.getPositions()) {
-            BallRenderState ballRenderState = getOrCreateBallState(position.getBallId(), position.getPosx(), position.getPosy());
-            ballRenderState.snapTo(position.getPosx(), position.getPosy());
+    }
+
+    @Override
+    public void onReconnecting() {
+    }
+
+    @Override
+    public void onInitialWorldState(InitialWorldStateEvent initialWorldStateEvent) {
+        resetBallStates();
+        lastSnapshotId = -1L;
+        for (BallSnapshot ballSnapshot : initialWorldStateEvent.getBalls()) {
+            BallRenderState ballRenderState = getOrCreateBallState(ballSnapshot.getBallId(), ballSnapshot.getX(), ballSnapshot.getY());
+            ballRenderState.snapTo(ballSnapshot.getX(), ballSnapshot.getY());
         }
     }
 
     @Override
-    public void onWorldMessage(WorldMessage worldMessage) {
-        if (worldMessage.getSnapshotId() <= lastSnapshotId) {
+    public void onWorldSnapshot(WorldSnapshotEvent worldSnapshotEvent) {
+        if (worldSnapshotEvent.getSnapshotId() <= lastSnapshotId) {
             return;
         }
-        lastSnapshotId = worldMessage.getSnapshotId();
+        lastSnapshotId = worldSnapshotEvent.getSnapshotId();
 
-        for (BallInfo position : worldMessage.getPositions()) {
-            BallRenderState ballRenderState = getOrCreateBallState(position.getBallId(), position.getPosx(), position.getPosy());
-            ballRenderState.beginInterpolation(position.getPosx(), position.getPosy(), Constant.SNAPSHOT_INTERVAL_SECONDS);
+        for (BallSnapshot ballSnapshot : worldSnapshotEvent.getBalls()) {
+            BallRenderState ballRenderState = getOrCreateBallState(ballSnapshot.getBallId(), ballSnapshot.getX(), ballSnapshot.getY());
+            ballRenderState.beginInterpolation(ballSnapshot.getX(), ballSnapshot.getY(), Constant.SNAPSHOT_INTERVAL_SECONDS);
         }
     }
 
     @Override
-    public void onTestMessage(TestMesssage testMesssage) {
+    public void onTestMessage(TestMessageEvent testMessageEvent) {
         // Reserved for future reliable UI events.
     }
 

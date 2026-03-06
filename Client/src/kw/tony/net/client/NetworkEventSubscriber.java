@@ -1,13 +1,25 @@
 package kw.tony.net.client;
 
-import kw.tony.shared.constant.message.BallInitMessage;
-import kw.tony.shared.constant.message.TestMesssage;
-import kw.tony.shared.constant.message.WorldMessage;
+import kw.tony.net.client.event.InitialWorldStateEvent;
+import kw.tony.net.client.event.TestMessageEvent;
+import kw.tony.net.client.event.WorldSnapshotEvent;
 
 public interface NetworkEventSubscriber {
-    void onBallInitMessage(BallInitMessage ballInitMessage);
+    default void onConnected() {
+    }
 
-    void onWorldMessage(WorldMessage worldMessage);
+    default void onDisconnected() {
+    }
 
-    void onTestMessage(TestMesssage testMesssage);
+    default void onReconnecting() {
+    }
+
+    default void onInitialWorldState(InitialWorldStateEvent initialWorldStateEvent) {
+    }
+
+    default void onWorldSnapshot(WorldSnapshotEvent worldSnapshotEvent) {
+    }
+
+    default void onTestMessage(TestMessageEvent testMessageEvent) {
+    }
 }

@@ -1,14 +1,22 @@
 package kw.tony.net.client;
 
 import com.esotericsoftware.kryonet.Client;
+import kw.tony.net.client.event.BallSnapshot;
+import kw.tony.net.client.event.InitialWorldStateEvent;
+import kw.tony.net.client.event.TestMessageEvent;
+import kw.tony.net.client.event.WorldSnapshotEvent;
 import kw.tony.net.client.listener.ClientListener;
 import kw.tony.shared.constant.Constant;
+import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
 import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 import kw.tony.shared.constant.register.ClassRegister;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -28,6 +36,7 @@ public class NetworkService {
     private final AtomicReference<WorldMessage> latestWorldMessage;
     private final Set<NetworkEventSubscriber> subscribers;
 
+    private volatile ConnectionLifecycleState connectionLifecycleState = ConnectionLifecycleState.IDLE;
     private volatile boolean running;
 
     public NetworkService() {
@@ -52,8 +61,8 @@ public class NetworkService {
     }
 
     public void subscribe(NetworkEventSubscriber subscriber) {
-        if (subscriber != null) {
-            subscribers.add(subscriber);
+        if (subscriber != null && subscribers.add(subscriber)) {
+            dispatchCurrentConnectionState(subscriber);
         }
     }
 
@@ -75,8 +84,9 @@ public class NetworkService {
 
         WorldMessage worldMessage = latestWorldMessage.getAndSet(null);
         if (worldMessage != null) {
+            WorldSnapshotEvent worldSnapshotEvent = toWorldSnapshotEvent(worldMessage);
             for (NetworkEventSubscriber subscriber : subscribers) {
-                subscriber.onWorldMessage(worldMessage);
+                subscriber.onWorldSnapshot(worldSnapshotEvent);
             }
         }
     }
@@ -103,7 +113,19 @@ public class NetworkService {
 
     public void onDisconnected() {
         clearInbox();
+        updateConnectionState(ConnectionLifecycleState.DISCONNECTED);
+        notifyDisconnected();
+        if (!running) {
+            return;
+        }
+        updateConnectionState(ConnectionLifecycleState.RECONNECTING);
+        notifyReconnecting();
         connect();
+    }
+
+    public void onConnected() {
+        updateConnectionState(ConnectionLifecycleState.CONNECTED);
+        notifyConnected();
     }
 
     private void connect() {
@@ -136,17 +158,17 @@ public class NetworkService {
 
     private void dispatchReliableEvent(Object event) {
         if (event instanceof BallInitMessage) {
-            BallInitMessage ballInitMessage = (BallInitMessage) event;
+            InitialWorldStateEvent initialWorldStateEvent = toInitialWorldStateEvent((BallInitMessage) event);
             for (NetworkEventSubscriber subscriber : subscribers) {
-                subscriber.onBallInitMessage(ballInitMessage);
+                subscriber.onInitialWorldState(initialWorldStateEvent);
             }
             return;
         }
 
         if (event instanceof TestMesssage) {
-            TestMesssage testMesssage = (TestMesssage) event;
+            TestMessageEvent testMessageEvent = toTestMessageEvent((TestMesssage) event);
             for (NetworkEventSubscriber subscriber : subscribers) {
-                subscriber.onTestMessage(testMesssage);
+                subscriber.onTestMessage(testMessageEvent);
             }
         }
     }
@@ -166,5 +188,64 @@ public class NetworkService {
     private void clearInbox() {
         eventQueue.clear();
         latestWorldMessage.set(null);
+    }
+
+    private void dispatchCurrentConnectionState(NetworkEventSubscriber subscriber) {
+        if (connectionLifecycleState == ConnectionLifecycleState.CONNECTED) {
+            subscriber.onConnected();
+        } else if (connectionLifecycleState == ConnectionLifecycleState.DISCONNECTED) {
+            subscriber.onDisconnected();
+        } else if (connectionLifecycleState == ConnectionLifecycleState.RECONNECTING) {
+            subscriber.onReconnecting();
+        }
+    }
+
+    private void notifyConnected() {
+        for (NetworkEventSubscriber subscriber : subscribers) {
+            subscriber.onConnected();
+        }
+    }
+
+    private void notifyDisconnected() {
+        for (NetworkEventSubscriber subscriber : subscribers) {
+            subscriber.onDisconnected();
+        }
+    }
+
+    private void notifyReconnecting() {
+        for (NetworkEventSubscriber subscriber : subscribers) {
+            subscriber.onReconnecting();
+        }
+    }
+
+    private void updateConnectionState(ConnectionLifecycleState connectionLifecycleState) {
+        this.connectionLifecycleState = connectionLifecycleState;
+    }
+
+    private InitialWorldStateEvent toInitialWorldStateEvent(BallInitMessage ballInitMessage) {
+        return new InitialWorldStateEvent(toBallSnapshots(ballInitMessage.getPositions()));
+    }
+
+    private WorldSnapshotEvent toWorldSnapshotEvent(WorldMessage worldMessage) {
+        return new WorldSnapshotEvent(worldMessage.getSnapshotId(), toBallSnapshots(worldMessage.getPositions()));
+    }
+
+    private TestMessageEvent toTestMessageEvent(TestMesssage testMesssage) {
+        return new TestMessageEvent(testMesssage.getValue(), testMesssage.getName());
+    }
+
+    private List<BallSnapshot> toBallSnapshots(List<BallInfo> ballInfos) {
+        ArrayList<BallSnapshot> ballSnapshots = new ArrayList<BallSnapshot>(ballInfos.size());
+        for (BallInfo ballInfo : ballInfos) {
+            ballSnapshots.add(new BallSnapshot(ballInfo.getBallId(), ballInfo.getPosx(), ballInfo.getPosy()));
+        }
+        return Collections.unmodifiableList(ballSnapshots);
+    }
+
+    private enum ConnectionLifecycleState {
+        IDLE,
+        CONNECTED,
+        DISCONNECTED,
+        RECONNECTING
     }
 }
