@@ -5,8 +5,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.kw.gdx.BaseGame;
 import com.kw.gdx.asset.Asset;
 import com.kw.gdx.screen.BaseScreen;
-import com.tony.game.constant.GameConstant;
-import kw.tony.net.client.ClientMain;
+import kw.tony.net.client.NetworkEventSubscriber;
+import kw.tony.net.client.NetworkService;
+import kw.tony.net.client.NetworkServiceProvider;
 import kw.tony.shared.constant.Constant;
 import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
@@ -16,8 +17,9 @@ import kw.tony.shared.constant.message.WorldMessage;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoadScreen extends BaseScreen {
+public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     private final Map<Integer, BallRenderState> ballStates = new HashMap<Integer, BallRenderState>();
+    private NetworkService networkService;
     private long lastSnapshotId = -1L;
 
     public LoadScreen(BaseGame game) {
@@ -25,39 +27,35 @@ public class LoadScreen extends BaseScreen {
     }
 
     @Override
-    public void initView() {
-        super.initView();
-        GameConstant.clientMain = ClientMain.getInstant();
+    public void show() {
+        super.show();
+        networkService = resolveNetworkService();
+        networkService.subscribe(this);
+    }
+
+    @Override
+    public void hide() {
+        if (networkService != null) {
+            networkService.unsubscribe(this);
+        }
+        super.hide();
     }
 
     @Override
     public void render(float delta) {
-        flushNetworkMessages();
         updateBallInterpolation(delta);
         super.render(delta);
     }
 
-    private void flushNetworkMessages() {
-        if (GameConstant.clientMain == null) {
-            return;
+    private NetworkService resolveNetworkService() {
+        if (game instanceof NetworkServiceProvider) {
+            return ((NetworkServiceProvider) game).getNetworkService();
         }
-
-        Object event;
-        while ((event = GameConstant.clientMain.pollEvent()) != null) {
-            if (event instanceof BallInitMessage) {
-                applyBallInitMessage((BallInitMessage) event);
-            } else if (event instanceof TestMesssage) {
-                applyTestMessage((TestMesssage) event);
-            }
-        }
-
-        WorldMessage worldMessage = GameConstant.clientMain.consumeLatestWorldMessage();
-        if (worldMessage != null) {
-            applyWorldMessage(worldMessage);
-        }
+        throw new IllegalStateException("Game does not provide a NetworkService");
     }
 
-    private void applyBallInitMessage(BallInitMessage ballInitMessage) {
+    @Override
+    public void onBallInitMessage(BallInitMessage ballInitMessage) {
         resetBallStates();
         lastSnapshotId = -1L;
         for (BallInfo position : ballInitMessage.getPositions()) {
@@ -66,7 +64,8 @@ public class LoadScreen extends BaseScreen {
         }
     }
 
-    private void applyWorldMessage(WorldMessage worldMessage) {
+    @Override
+    public void onWorldMessage(WorldMessage worldMessage) {
         if (worldMessage.getSnapshotId() <= lastSnapshotId) {
             return;
         }
@@ -78,7 +77,8 @@ public class LoadScreen extends BaseScreen {
         }
     }
 
-    private void applyTestMessage(TestMesssage testMesssage) {
+    @Override
+    public void onTestMessage(TestMesssage testMesssage) {
         // Reserved for future reliable UI events.
     }
 
@@ -110,8 +110,8 @@ public class LoadScreen extends BaseScreen {
 
     @Override
     public void dispose() {
-        if (GameConstant.clientMain != null) {
-            GameConstant.clientMain.clearInbox();
+        if (networkService != null) {
+            networkService.unsubscribe(this);
         }
         resetBallStates();
         super.dispose();

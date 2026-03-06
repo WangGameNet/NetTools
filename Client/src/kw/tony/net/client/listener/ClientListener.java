@@ -3,13 +3,13 @@ package kw.tony.net.client.listener;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.kw.gdx.utils.log.NLog;
-import kw.tony.net.client.ClientMain;
+import kw.tony.net.client.NetworkService;
 
 public class ClientListener implements Listener {
-    private final ClientMain clientMain;
+    private final NetworkService networkService;
 
-    public ClientListener(ClientMain clientMain) {
-        this.clientMain = clientMain;
+    public ClientListener(NetworkService networkService) {
+        this.networkService = networkService;
     }
 
     @Override
@@ -22,14 +22,14 @@ public class ClientListener implements Listener {
     public void disconnected(Connection connection) {
         Listener.super.disconnected(connection);
         NLog.i("client====>  disconnected ");
-        clientMain.onDisconnected();
+        networkService.onDisconnected();
     }
 
     @Override
     public void received(Connection connection, Object object) {
         Listener.super.received(connection, object);
         NLog.i("client====>  received ");
-        clientMain.onNetworkMessage(object);
+        networkService.onNetworkMessage(object);
     }
 
     @Override

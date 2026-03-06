@@ -5,12 +5,13 @@ import com.kw.gdx.BaseGame;
 import com.kw.gdx.constant.Constant;
 import com.kw.gdx.resource.annotation.GameInfo;
 import com.kw.gdx.utils.log.NLog;
-import com.tony.game.constant.GameConstant;
 import com.tony.game.screen.LoadScreen;
-import kw.tony.net.client.ClientMain;
+import kw.tony.net.client.NetworkService;
+import kw.tony.net.client.NetworkServiceProvider;
 
 @GameInfo(width = 1080, height = 1920, batch = Constant.COUPOLYGONBATCH)
-public class GameMain extends BaseGame {
+public class GameMain extends BaseGame implements NetworkServiceProvider {
+    private final NetworkService networkService = new NetworkService();
 
     public GameMain() {
 
@@ -18,10 +19,17 @@ public class GameMain extends BaseGame {
 
     @Override
     public void create() {
+        networkService.start();
         super.create();
         NLog.isLog = false;
         Constant.viewColor.set(0.f, 0.f, 0.0f, 1.0f);
         NLog.i("create -->");
+    }
+
+    @Override
+    public void render() {
+        networkService.update();
+        super.render();
     }
 
     @Override
@@ -46,5 +54,11 @@ public class GameMain extends BaseGame {
 
     @Override
     protected void otherDispose() {
+        networkService.dispose();
+    }
+
+    @Override
+    public NetworkService getNetworkService() {
+        return networkService;
     }
 }
