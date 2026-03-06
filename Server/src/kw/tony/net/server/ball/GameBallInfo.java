@@ -65,6 +65,17 @@ public class GameBallInfo {
         this.y = y;
     }
 
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+        this.currentX = x;
+        this.currentY = y;
+    }
+
+    public void setTarget(float targetX, float targetY) {
+        this.targetX = targetX;
+        this.targetY = targetY;
+    }
 
     @Override
     public String toString() {
@@ -75,8 +86,9 @@ public class GameBallInfo {
                 '}';
     }
 
-    public void calBallCurrentPos(float time) {
-        currentX = x + (targetX - x) * time / 1.5f;
-        currentY = y + (targetY - y) * time / 1.5f;
+    public void calBallCurrentPos(float progress) {
+        float clampedProgress = Math.max(0f, Math.min(1f, progress));
+        currentX = x + (targetX - x) * clampedProgress;
+        currentY = y + (targetY - y) * clampedProgress;
     }
 }

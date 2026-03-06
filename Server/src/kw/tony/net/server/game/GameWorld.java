@@ -2,7 +2,7 @@ package kw.tony.net.server.game;
 
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
-import kw.tony.shared.constant.bean.BallInfo;
+import kw.tony.shared.constant.Constant;
 
 public class GameWorld {
     private static GameWorld instance;
@@ -15,8 +15,10 @@ public class GameWorld {
         for (int i = 0; i < 10; i++) {
             GameBallInfo gameBallInfo = new GameBallInfo();
             gameBallInfo.setId(i);
-            gameBallInfo.setX((float) (Math.random() * 720));
-            gameBallInfo.setY((float) (Math.random() * 720));
+            float startX = randomPosition();
+            float startY = randomPosition();
+            gameBallInfo.setPosition(startX, startY);
+            gameBallInfo.setTarget(startX, startY);
             ballInfos.add(gameBallInfo);
         }
     }
@@ -36,18 +38,21 @@ public class GameWorld {
 
     public void update(float delta){
         time += delta;
-        if (time > 1.5f) {
-            time = 0;
+        while (time >= Constant.BALL_MOVE_INTERVAL_SECONDS) {
+            time -= Constant.BALL_MOVE_INTERVAL_SECONDS;
             for (GameBallInfo gameBallInfo : ballInfos) {
-                gameBallInfo.setX(gameBallInfo.getCurrentX());
-                gameBallInfo.setY(gameBallInfo.getCurrentY());
-                gameBallInfo.setTargetX((float) (Math.random() * 720));
-                gameBallInfo.setTargetY((float) (Math.random() * 720));
-            }
-        }else {
-            for (GameBallInfo gameBallInfo : ballInfos) {
-                gameBallInfo.calBallCurrentPos(time);
+                gameBallInfo.setPosition(gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY());
+                gameBallInfo.setTarget(randomPosition(), randomPosition());
             }
         }
+
+        float progress = time / Constant.BALL_MOVE_INTERVAL_SECONDS;
+        for (GameBallInfo gameBallInfo : ballInfos) {
+            gameBallInfo.calBallCurrentPos(progress);
+        }
+    }
+
+    private float randomPosition() {
+        return (float) (Math.random() * 720);
     }
 }

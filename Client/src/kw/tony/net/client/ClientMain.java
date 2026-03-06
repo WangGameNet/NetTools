@@ -1,60 +1,127 @@
 package kw.tony.net.client;
 
 import com.esotericsoftware.kryonet.Client;
-import kw.tony.net.client.listener.ClientGameListener;
 import kw.tony.net.client.listener.ClientListener;
 import kw.tony.shared.constant.Constant;
-import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 import kw.tony.shared.constant.register.ClassRegister;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ClientMain {
+    private static final long RECONNECT_DELAY_MILLIS = 2000L;
+
     private static ClientMain clientMain;
-    private ClientGameListener clientGameListener;
-    public Client client;
-    private ClientListener clientListener;
-    public ClientMain(){
-        client = new Client();
+
+    public final Client client;
+    private final ClientListener clientListener;
+    private final ExecutorService connectionExecutor;
+    private final AtomicBoolean connecting;
+    private volatile boolean running;
+
+    // Reliable TCP messages are consumed on the render thread.
+    private final ConcurrentLinkedQueue<Object> eventQueue = new ConcurrentLinkedQueue<Object>();
+    // World snapshots are lossy; only the newest one matters.
+    private final AtomicReference<WorldMessage> latestWorldMessage = new AtomicReference<WorldMessage>();
+
+    public ClientMain() {
+        this.connectionExecutor = Executors.newSingleThreadExecutor();
+        this.connecting = new AtomicBoolean(false);
+        this.running = true;
+        this.client = new Client();
         ClassRegister.register(client.getKryo());
-        this.clientListener = new ClientListener();
+        this.clientListener = new ClientListener(this);
         client.addListener(clientListener);
         client.start();
         connetServer();
     }
 
     private void connetServer() {
-        new Thread(() -> {
-            try {
-                client.connect(5000,"localhost", Constant.TCP_PORT,Constant.UDP_PORT);
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (!running || !connecting.compareAndSet(false, true)) {
+            return;
+        }
 
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
+        connectionExecutor.execute(() -> {
+            try {
+                while (running && !client.isConnected()) {
+                    try {
+                        client.connect(5000, Constant.SERVER_HOST, Constant.TCP_PORT, Constant.UDP_PORT);
+                    } catch (IOException e) {
+                        try {
+                            Thread.sleep(RECONNECT_DELAY_MILLIS);
+                        } catch (InterruptedException interruptedException) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                    }
                 }
-                connetServer();
+            } finally {
+                connecting.set(false);
+                if (running && !client.isConnected()) {
+                    connetServer();
+                }
             }
-        }).start();
+        });
     }
 
     public static ClientMain getInstant() {
-        if(clientMain == null){
+        if (clientMain == null) {
             clientMain = new ClientMain();
         }
         return clientMain;
     }
 
-    public void sendTCP(Object loginMesssage) {
-        client.sendTCP(loginMesssage);
+    public void onNetworkMessage(Object object) {
+        if (object instanceof WorldMessage) {
+            offerWorldMessage((WorldMessage) object);
+        } else {
+            eventQueue.offer(object);
+        }
     }
 
-    public void setClientGameListener(ClientGameListener clientGameListener) {
-        this.clientGameListener = clientGameListener;
-        this.clientListener.setClientGameListener(this.clientGameListener);
+    private void offerWorldMessage(WorldMessage worldMessage) {
+        while (true) {
+            WorldMessage currentMessage = latestWorldMessage.get();
+            if (currentMessage != null && currentMessage.getSnapshotId() >= worldMessage.getSnapshotId()) {
+                return;
+            }
+            if (latestWorldMessage.compareAndSet(currentMessage, worldMessage)) {
+                return;
+            }
+        }
+    }
+
+    public Object pollEvent() {
+        return eventQueue.poll();
+    }
+
+    public WorldMessage consumeLatestWorldMessage() {
+        return latestWorldMessage.getAndSet(null);
+    }
+
+    public void clearInbox() {
+        eventQueue.clear();
+        latestWorldMessage.set(null);
+    }
+
+    public void onDisconnected() {
+        clearInbox();
+        connetServer();
+    }
+
+    public void sendTCP(Object message) {
+        client.sendTCP(message);
+    }
+
+    public void dispose() {
+        running = false;
+        clearInbox();
+        client.stop();
+        connectionExecutor.shutdownNow();
     }
 }

@@ -1,15 +1,23 @@
 package kw.tony.shared.constant.message;
 
-import com.badlogic.gdx.math.Vector2;
 import kw.tony.shared.constant.bean.BallInfo;
 
 import java.util.ArrayList;
 
 public class WorldMessage {
+    private long snapshotId;
     private ArrayList<BallInfo> positions;
 
     public WorldMessage(){
         this.positions = new ArrayList<>();
+    }
+
+    public long getSnapshotId() {
+        return snapshotId;
+    }
+
+    public void setSnapshotId(long snapshotId) {
+        this.snapshotId = snapshotId;
     }
 
     public void setPositions(ArrayList<BallInfo> positions) {
@@ -23,7 +31,8 @@ public class WorldMessage {
     @Override
     public String toString() {
         return "WorldMessage{" +
-                "positions=" + positions +
+                "snapshotId=" + snapshotId +
+                ", positions=" + positions +
                 '}';
     }
 }
