@@ -6,15 +6,18 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.kw.gdx.utils.log.NLog;
-import kw.tony.shared.constant.message.LoginMesssage;
+import kw.tony.net.server.manager.ServerManager;
+import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.Message;
 
 public class ServerListener implements Listener {
     private Array<Connection> connections;
     private Server server;
-    public ServerListener(Server server){
+    private ServerManager serverManager;
+    public ServerListener(Server server, ServerManager serverManager){
         this.server = server;
         this.connections = new Array<>();
+        this.serverManager = serverManager;
     }
 
     @Override
@@ -22,6 +25,7 @@ public class ServerListener implements Listener {
         Listener.super.connected(connection);
         NLog.i("=========server ===== connected");
         connections.add(connection);
+        serverManager.initGameData(connection);
     }
 
     @Override
@@ -39,9 +43,9 @@ public class ServerListener implements Listener {
             NLog.i("=========server ===== received");
             Gdx.app.postRunnable(()->{
                 System.out.println(object);
-                LoginMesssage loginMesssage = new LoginMesssage();
-                loginMesssage.setName("xxxxxxxxx");
-                server.sendToAllTCP(loginMesssage);
+                TestMesssage testMesssage = new TestMesssage();
+                testMesssage.setName("xxxxxxxxx");
+                server.sendToAllTCP(testMesssage);
             });
         }
     }

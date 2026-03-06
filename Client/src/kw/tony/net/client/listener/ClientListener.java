@@ -3,7 +3,9 @@ package kw.tony.net.client.listener;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.kw.gdx.utils.log.NLog;
-import kw.tony.shared.constant.message.LoginMesssage;
+import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.TestMesssage;
+import kw.tony.shared.constant.message.WorldMessage;
 
 public class ClientListener implements Listener {
     @Override
@@ -22,8 +24,15 @@ public class ClientListener implements Listener {
     public void received(Connection connection, Object object) {
         Listener.super.received(connection, object);
         NLog.i("client====>  received ");
-        if (object instanceof LoginMesssage){
-            System.out.println(object);
+        if (clientGameListener!=null) {
+            if (object instanceof TestMesssage) {
+                clientGameListener.testMesssage((TestMesssage) object);
+            } else if (object instanceof WorldMessage) {
+                clientGameListener.WorldMessage((WorldMessage) object);
+            }else if (object instanceof BallInitMessage) {
+                System.out.println(object);
+                clientGameListener.ballInitMessage((BallInitMessage) object);
+            }
         }
     }
 
@@ -31,5 +40,10 @@ public class ClientListener implements Listener {
     public void idle(Connection connection) {
         Listener.super.idle(connection);
         NLog.i("client====>  idle ");
+    }
+
+    private ClientGameListener clientGameListener;
+    public void setClientGameListener(ClientGameListener clientGameListener) {
+        this.clientGameListener = clientGameListener;
     }
 }

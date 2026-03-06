@@ -7,6 +7,7 @@ project.ext.assetsDir = new File("../android/assets");
 
 dependencies {
     implementation "com.github.crykn:kryonet:2.22.9"
+    implementation project(":libGdx")
 }
 
 task dist(type: Jar) {

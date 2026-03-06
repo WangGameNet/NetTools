@@ -1,6 +1,6 @@
 package kw.tony.shared.constant.message;
 
-public class LoginMesssage extends Message{
+public class TestMesssage extends Message{
     private String name;
 
     public String getName() {
