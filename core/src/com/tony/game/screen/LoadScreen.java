@@ -18,12 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
-    private final Map<Integer, BallRenderState> ballStates = new HashMap<Integer, BallRenderState>();
+    private final Map<Integer, BallRenderState> ballStates;
     private NetworkService networkService;
     private long lastSnapshotId = -1L;
 
     public LoadScreen(BaseGame game) {
         super(game);
+        this.ballStates = new HashMap<Integer, BallRenderState>();
     }
 
     @Override

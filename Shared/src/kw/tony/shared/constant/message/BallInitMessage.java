@@ -4,7 +4,7 @@ import kw.tony.shared.constant.bean.BallInfo;
 
 import java.util.ArrayList;
 
-public class BallInitMessage {
+public class BallInitMessage extends Message {
     private ArrayList<BallInfo> positions;
 
     public BallInitMessage(){

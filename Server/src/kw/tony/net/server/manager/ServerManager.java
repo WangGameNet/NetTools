@@ -1,55 +1,35 @@
 package kw.tony.net.server.manager;
 
 import com.badlogic.gdx.utils.Array;
-import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.kryonet.Server;
-import com.kw.gdx.utils.log.NLog;
+import kw.tony.net.server.ServerNetworkService;
+import kw.tony.net.server.ServerNetworkSubscriber;
 import kw.tony.net.server.ball.GameBallInfo;
+import kw.tony.net.server.event.BallState;
+import kw.tony.net.server.event.ClientConnectedEvent;
+import kw.tony.net.server.event.ClientDisconnectedEvent;
+import kw.tony.net.server.event.ClientTestMessageReceivedEvent;
+import kw.tony.net.server.event.InitialWorldState;
+import kw.tony.net.server.event.TestMessagePayload;
+import kw.tony.net.server.event.WorldSnapshot;
 import kw.tony.net.server.game.GameWorld;
-import kw.tony.net.server.listener.ServerListener;
 import kw.tony.shared.constant.Constant;
-import kw.tony.shared.constant.bean.BallInfo;
-import kw.tony.shared.constant.message.BallInitMessage;
-import kw.tony.shared.constant.message.WorldMessage;
-import kw.tony.shared.constant.register.ClassRegister;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class ServerManager {
-    private final Server server;
-    private static ServerManager instance;
+public class ServerManager implements ServerNetworkSubscriber {
+    private final ServerNetworkService serverNetworkService;
     private final GameWorld gameWorld;
+
     private float simulationAccumulator;
     private float snapshotAccumulator;
     private long snapshotId;
 
-    private ServerManager() {
-        this.server = new Server();
-        ClassRegister.register(server.getKryo());
-        server.addListener(new ServerListener(server, this));
-        server.start();
-        try {
-            server.bind(Constant.TCP_PORT, Constant.UDP_PORT);
-        } catch (IOException e) {
-            NLog.d(e);
-        }
-
-        this.gameWorld = GameWorld.getInstance();
+    public ServerManager(ServerNetworkService serverNetworkService, GameWorld gameWorld) {
+        this.serverNetworkService = serverNetworkService;
+        this.gameWorld = gameWorld;
         this.gameWorld.startGame();
-    }
-
-    public void initGameData(Connection connection){
-        BallInitMessage ballInitMessage = new BallInitMessage();
-        ballInitMessage.setPositions(copyBallInfos());
-        server.sendToTCP(connection.getID(), ballInitMessage);
-    }
-
-    public static ServerManager getInstance() {
-        if (instance == null) {
-            instance = new ServerManager();
-        }
-        return instance;
     }
 
     public void update(float deltaTime) {
@@ -68,23 +48,41 @@ public class ServerManager {
         }
     }
 
-    private void broadcastSnapshot() {
-        if (server.getConnections().isEmpty()) {
-            return;
-        }
-
-        WorldMessage worldMessage = new WorldMessage();
-        worldMessage.setSnapshotId(++snapshotId);
-        worldMessage.setPositions(copyBallInfos());
-        server.sendToAllUDP(worldMessage);
+    @Override
+    public void onClientConnected(ClientConnectedEvent clientConnectedEvent) {
+        serverNetworkService.sendInitialWorldState(
+                clientConnectedEvent.getClientId(),
+                new InitialWorldState(copyBallStates())
+        );
     }
 
-    private ArrayList<BallInfo> copyBallInfos() {
-        ArrayList<BallInfo> ballInfos = new ArrayList<BallInfo>();
+    @Override
+    public void onClientDisconnected(ClientDisconnectedEvent clientDisconnectedEvent) {
+        // Reserved for future session cleanup.
+    }
+
+    @Override
+    public void onTestMessageReceived(ClientTestMessageReceivedEvent clientTestMessageReceivedEvent) {
+        serverNetworkService.broadcastTestMessage(new TestMessagePayload(
+                clientTestMessageReceivedEvent.getValue(),
+                "xxxxxxxxx"
+        ));
+    }
+
+    private void broadcastSnapshot() {
+        serverNetworkService.broadcastWorldSnapshot(new WorldSnapshot(++snapshotId, copyBallStates()));
+    }
+
+    private List<BallState> copyBallStates() {
         Array<GameBallInfo> gameBallInfos = gameWorld.getBallInfos();
+        ArrayList<BallState> ballStates = new ArrayList<BallState>(gameBallInfos.size);
         for (GameBallInfo gameBallInfo : gameBallInfos) {
-            ballInfos.add(new BallInfo(gameBallInfo.getId(), gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY()));
+            ballStates.add(new BallState(
+                    gameBallInfo.getId(),
+                    gameBallInfo.getCurrentX(),
+                    gameBallInfo.getCurrentY()
+            ));
         }
-        return ballInfos;
+        return Collections.unmodifiableList(ballStates);
     }
 }
