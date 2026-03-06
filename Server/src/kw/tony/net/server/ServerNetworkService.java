@@ -1,0 +1,159 @@
+package kw.tony.net.server;
+
+import com.esotericsoftware.kryonet.Connection;
+import com.esotericsoftware.kryonet.Server;
+import kw.tony.net.server.event.BallState;
+import kw.tony.net.server.event.ClientConnectedEvent;
+import kw.tony.net.server.event.ClientDisconnectedEvent;
+import kw.tony.net.server.event.ClientTestMessageReceivedEvent;
+import kw.tony.net.server.event.InitialWorldState;
+import kw.tony.net.server.event.TestMessagePayload;
+import kw.tony.net.server.event.WorldSnapshot;
+import kw.tony.net.server.listener.ServerListener;
+import kw.tony.shared.constant.Constant;
+import kw.tony.shared.constant.bean.BallInfo;
+import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.TestMesssage;
+import kw.tony.shared.constant.message.WorldMessage;
+import kw.tony.shared.constant.register.ClassRegister;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+public class ServerNetworkService {
+    private final Server server;
+    private final ServerListener serverListener;
+    private final ConcurrentLinkedQueue<Object> inboundEventQueue;
+    private final Set<ServerNetworkSubscriber> subscribers;
+
+    private volatile boolean running;
+
+    public ServerNetworkService() {
+        this.server = new Server();
+        this.serverListener = new ServerListener(this);
+        this.inboundEventQueue = new ConcurrentLinkedQueue<Object>();
+        this.subscribers = new CopyOnWriteArraySet<ServerNetworkSubscriber>();
+        ClassRegister.register(server.getKryo());
+        server.addListener(serverListener);
+    }
+
+    public void start() {
+        if (running) {
+            return;
+        }
+
+        running = true;
+        server.start();
+        try {
+            server.bind(Constant.TCP_PORT, Constant.UDP_PORT);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to bind server ports", e);
+        }
+    }
+
+    public void stop() {
+        running = false;
+        inboundEventQueue.clear();
+        subscribers.clear();
+        server.stop();
+    }
+
+    public void subscribe(ServerNetworkSubscriber subscriber) {
+        if (subscriber != null) {
+            subscribers.add(subscriber);
+        }
+    }
+
+    public void unsubscribe(ServerNetworkSubscriber subscriber) {
+        if (subscriber != null) {
+            subscribers.remove(subscriber);
+        }
+    }
+
+    public void update() {
+        Object event;
+        while ((event = inboundEventQueue.poll()) != null) {
+            dispatchInboundEvent(event);
+        }
+    }
+
+    public void sendInitialWorldState(int clientId, InitialWorldState initialWorldState) {
+        BallInitMessage ballInitMessage = new BallInitMessage();
+        ballInitMessage.setPositions(toBallInfos(initialWorldState.getBalls()));
+        server.sendToTCP(clientId, ballInitMessage);
+    }
+
+    public void broadcastWorldSnapshot(WorldSnapshot worldSnapshot) {
+        if (server.getConnections().isEmpty()) {
+            return;
+        }
+
+        WorldMessage worldMessage = new WorldMessage();
+        worldMessage.setSnapshotId(worldSnapshot.getSnapshotId());
+        worldMessage.setPositions(toBallInfos(worldSnapshot.getBalls()));
+        server.sendToAllUDP(worldMessage);
+    }
+
+    public void broadcastTestMessage(TestMessagePayload testMessagePayload) {
+        TestMesssage testMesssage = new TestMesssage();
+        testMesssage.setValue(testMessagePayload.getValue());
+        testMesssage.setName(testMessagePayload.getName());
+        server.sendToAllTCP(testMesssage);
+    }
+
+    public void onClientConnected(Connection connection) {
+        inboundEventQueue.offer(new ClientConnectedEvent(connection.getID()));
+    }
+
+    public void onClientDisconnected(Connection connection) {
+        inboundEventQueue.offer(new ClientDisconnectedEvent(connection.getID()));
+    }
+
+    public void onMessageReceived(Connection connection, Object object) {
+        if (object instanceof TestMesssage) {
+            TestMesssage testMesssage = (TestMesssage) object;
+            inboundEventQueue.offer(new ClientTestMessageReceivedEvent(
+                    connection.getID(),
+                    testMesssage.getValue(),
+                    testMesssage.getName()
+            ));
+        }
+    }
+
+    private void dispatchInboundEvent(Object event) {
+        if (event instanceof ClientConnectedEvent) {
+            ClientConnectedEvent clientConnectedEvent = (ClientConnectedEvent) event;
+            for (ServerNetworkSubscriber subscriber : subscribers) {
+                subscriber.onClientConnected(clientConnectedEvent);
+            }
+            return;
+        }
+
+        if (event instanceof ClientDisconnectedEvent) {
+            ClientDisconnectedEvent clientDisconnectedEvent = (ClientDisconnectedEvent) event;
+            for (ServerNetworkSubscriber subscriber : subscribers) {
+                subscriber.onClientDisconnected(clientDisconnectedEvent);
+            }
+            return;
+        }
+
+        if (event instanceof ClientTestMessageReceivedEvent) {
+            ClientTestMessageReceivedEvent clientTestMessageReceivedEvent = (ClientTestMessageReceivedEvent) event;
+            for (ServerNetworkSubscriber subscriber : subscribers) {
+                subscriber.onTestMessageReceived(clientTestMessageReceivedEvent);
+            }
+        }
+    }
+
+    private ArrayList<BallInfo> toBallInfos(List<BallState> ballStates) {
+        ArrayList<BallInfo> ballInfos = new ArrayList<BallInfo>(ballStates.size());
+        for (BallState ballState : ballStates) {
+            ballInfos.add(new BallInfo(ballState.getBallId(), ballState.getX(), ballState.getY()));
+        }
+        return ballInfos;
+    }
+}

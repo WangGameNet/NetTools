@@ -1,36 +1,36 @@
 package kw.tony.net.server;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.kryonet.Server;
-import com.kw.gdx.utils.log.NLog;
-import kw.tony.net.server.listener.ServerListener;
-import kw.tony.shared.constant.Constant;
-import kw.tony.shared.constant.message.LoginMesssage;
-import kw.tony.shared.constant.message.Message;
-
-import java.io.IOException;
+import com.badlogic.gdx.Gdx;
+import kw.tony.net.server.manager.ServerManager;
+import kw.tony.net.server.game.GameWorld;
 
 public class ServerMain extends ApplicationAdapter {
-    private Server server;
+    private ServerNetworkService serverNetworkService;
+    private ServerManager serverManager;
 
     @Override
     public void create() {
         super.create();
-        this.server = new Server();
-        addClass();
-        server.addListener(new ServerListener(server));
-        server.start();
-        try {
-            server.bind(Constant.TCP_PORT, Constant.UDP_PORT);
-        } catch (IOException e) {
-            NLog.d(e);
-        }
-
+        serverNetworkService = new ServerNetworkService();
+        serverManager = new ServerManager(serverNetworkService, new GameWorld());
+        serverNetworkService.subscribe(serverManager);
+        serverNetworkService.start();
     }
 
-    public void addClass(){
-        server.getKryo().register(LoginMesssage.class);
+    @Override
+    public void render() {
+        super.render();
+        serverNetworkService.update();
+        serverManager.update(Gdx.graphics.getDeltaTime());
+    }
+
+    @Override
+    public void dispose() {
+        if (serverNetworkService != null) {
+            serverNetworkService.unsubscribe(serverManager);
+            serverNetworkService.stop();
+        }
+        super.dispose();
     }
 }

@@ -1,0 +1,6 @@
+width : 360
+height : 640
+version : v1.0
+appName : Art Puzzle
+localpath : D://gamedownload/
+alllevel : 140

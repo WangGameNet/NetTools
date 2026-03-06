@@ -6,7 +6,7 @@ import com.tony.game.GameMain;
 import kw.test.file.Bean;
 import kw.test.file.ReadFileConfig;
 
-//1.43f
+//1.43
 public class DesktopLauncher {
     public static void main(String[] args) {
         ReadFileConfig readFileConfig = new ReadFileConfig();
