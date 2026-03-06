@@ -22,11 +22,24 @@ public class ClientMain {
         this.clientListener = new ClientListener();
         client.addListener(clientListener);
         client.start();
-        try {
-            client.connect(5000,"localhost", Constant.TCP_PORT,Constant.UDP_PORT);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        connetServer();
+    }
+
+    private void connetServer() {
+        new Thread(() -> {
+            try {
+                client.connect(5000,"localhost", Constant.TCP_PORT,Constant.UDP_PORT);
+            } catch (IOException e) {
+                e.printStackTrace();
+
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+                connetServer();
+            }
+        }).start();
     }
 
     public static ClientMain getInstant() {
