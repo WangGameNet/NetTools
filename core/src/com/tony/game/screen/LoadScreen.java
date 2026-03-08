@@ -8,10 +8,7 @@ import com.kw.gdx.screen.BaseScreen;
 import kw.tony.net.client.NetworkEventSubscriber;
 import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
-import kw.tony.net.client.event.BallSnapshot;
-import kw.tony.net.client.event.InitialWorldStateEvent;
-import kw.tony.net.client.event.TestMessageEvent;
-import kw.tony.net.client.event.WorldSnapshotEvent;
+import kw.tony.net.client.event.*;
 import kw.tony.shared.constant.Constant;
 
 import java.util.HashMap;
@@ -97,6 +94,14 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
         // Reserved for future reliable UI events.
     }
 
+    @Override
+    public void onRemoveMessage(RemoveIdEvent removeIdEvent) {
+        BallRenderState ballRenderState = ballStates.remove(removeIdEvent.getId());
+        if (ballRenderState!=null){
+            ballRenderState.removeImage();
+        }
+    }
+
     private void updateBallInterpolation(float delta) {
         for (BallRenderState ballRenderState : ballStates.values()) {
             ballRenderState.update(delta);
@@ -180,6 +185,10 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
                     MathUtils.lerp(startX, targetX, alpha),
                     MathUtils.lerp(startY, targetY, alpha)
             );
+        }
+
+        public void removeImage() {
+            image.remove();
         }
     }
 }

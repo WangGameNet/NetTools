@@ -2,17 +2,12 @@ package kw.tony.net.server;
 
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Server;
-import kw.tony.net.server.event.BallState;
-import kw.tony.net.server.event.ClientConnectedEvent;
-import kw.tony.net.server.event.ClientDisconnectedEvent;
-import kw.tony.net.server.event.ClientTestMessageReceivedEvent;
-import kw.tony.net.server.event.InitialWorldState;
-import kw.tony.net.server.event.TestMessagePayload;
-import kw.tony.net.server.event.WorldSnapshot;
+import kw.tony.net.server.event.*;
 import kw.tony.net.server.listener.ServerListener;
 import kw.tony.shared.constant.Constant;
 import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.RemoveMessage;
 import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 import kw.tony.shared.constant.register.ClassRegister;
@@ -83,6 +78,7 @@ public class ServerNetworkService {
 
     public void sendInitialWorldState(int clientId, InitialWorldState initialWorldState) {
         BallInitMessage ballInitMessage = new BallInitMessage();
+        ballInitMessage.setUid(clientId);
         ballInitMessage.setPositions(toBallInfos(initialWorldState.getBalls()));
         server.sendToTCP(clientId, ballInitMessage);
     }
@@ -103,6 +99,12 @@ public class ServerNetworkService {
         testMesssage.setValue(testMessagePayload.getValue());
         testMesssage.setName(testMessagePayload.getName());
         server.sendToAllTCP(testMesssage);
+    }
+
+    public void broadcastRemoveMessage(RemoveIdState removeIdState){
+        RemoveMessage message = new RemoveMessage();
+        message.setRemoveId(removeIdState.removeId);
+        server.sendToAllTCP(message);
     }
 
     public void onClientConnected(Connection connection) {

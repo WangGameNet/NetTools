@@ -3,6 +3,7 @@ package kw.tony.shared.constant.register;
 import com.esotericsoftware.kryo.Kryo;
 import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.RemoveMessage;
 import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 
@@ -15,6 +16,7 @@ public class ClassRegister {
         kryo.register(ArrayList.class);
         kryo.register(BallInfo.class);
         kryo.register(BallInitMessage.class);
+        kryo.register(RemoveMessage.class);
 
     }
 }

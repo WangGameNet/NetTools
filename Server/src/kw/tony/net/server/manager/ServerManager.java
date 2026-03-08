@@ -4,15 +4,10 @@ import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ServerNetworkService;
 import kw.tony.net.server.ServerNetworkSubscriber;
 import kw.tony.net.server.ball.GameBallInfo;
-import kw.tony.net.server.event.BallState;
-import kw.tony.net.server.event.ClientConnectedEvent;
-import kw.tony.net.server.event.ClientDisconnectedEvent;
-import kw.tony.net.server.event.ClientTestMessageReceivedEvent;
-import kw.tony.net.server.event.InitialWorldState;
-import kw.tony.net.server.event.TestMessagePayload;
-import kw.tony.net.server.event.WorldSnapshot;
+import kw.tony.net.server.event.*;
 import kw.tony.net.server.game.GameWorld;
 import kw.tony.shared.constant.Constant;
+import kw.tony.shared.constant.message.RemoveMessage;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +36,7 @@ public class ServerManager implements ServerNetworkSubscriber {
             gameWorld.update(Constant.WORLD_STEP_SECONDS);
             simulationAccumulator -= Constant.WORLD_STEP_SECONDS;
         }
-
+        //更新是延后的
         while (snapshotAccumulator >= Constant.SNAPSHOT_INTERVAL_SECONDS) {
             broadcastSnapshot();
             snapshotAccumulator -= Constant.SNAPSHOT_INTERVAL_SECONDS;
@@ -50,6 +45,7 @@ public class ServerManager implements ServerNetworkSubscriber {
 
     @Override
     public void onClientConnected(ClientConnectedEvent clientConnectedEvent) {
+        gameWorld.createGame(clientConnectedEvent.getClientId());
         serverNetworkService.sendInitialWorldState(
                 clientConnectedEvent.getClientId(),
                 new InitialWorldState(copyBallStates())
@@ -59,6 +55,11 @@ public class ServerManager implements ServerNetworkSubscriber {
     @Override
     public void onClientDisconnected(ClientDisconnectedEvent clientDisconnectedEvent) {
         // Reserved for future session cleanup.
+        gameWorld.removeBall(clientDisconnectedEvent.getClientId());
+        RemoveIdState removeMessage = new RemoveIdState();
+        removeMessage.setRemoveId(clientDisconnectedEvent.getClientId());
+        serverNetworkService.broadcastRemoveMessage(removeMessage);
+
     }
 
     @Override

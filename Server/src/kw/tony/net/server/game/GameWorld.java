@@ -2,7 +2,6 @@ package kw.tony.net.server.game;
 
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
-import kw.tony.shared.constant.Constant;
 
 public class GameWorld {
     private Array<GameBallInfo> ballInfos;
@@ -16,14 +15,37 @@ public class GameWorld {
      * init  ball
      */
     public void startGame(){
-        for (int i = 0; i < 10; i++) {
-            GameBallInfo gameBallInfo = new GameBallInfo();
-            gameBallInfo.setId(i);
-            float startX = randomPosition();
-            float startY = randomPosition();
-            gameBallInfo.setPosition(startX, startY);
-            gameBallInfo.setTarget(startX, startY);
-            ballInfos.add(gameBallInfo);
+//        for (int i = 0; i < 10; i++) {
+//            GameBallInfo gameBallInfo = new GameBallInfo();
+//            gameBallInfo.setId(i);
+//            float startX = randomPosition();
+//            float startY = randomPosition();
+//            gameBallInfo.setPosition(startX, startY);
+//            gameBallInfo.setTarget(startX, startY);
+//            ballInfos.add(gameBallInfo);
+//        }
+    }
+
+    public void createGame(int clientId){
+        GameBallInfo gameBallInfo = new GameBallInfo();
+        gameBallInfo.setId(clientId);
+        float startX = randomPosition();
+        float startY = randomPosition();
+        gameBallInfo.setPosition(startX, startY);
+        gameBallInfo.setTarget(startX, startY);
+        ballInfos.add(gameBallInfo);
+    }
+
+    public void removeBall(int clientId){
+        GameBallInfo info = null;
+        for (GameBallInfo ballInfo : ballInfos) {
+            if (ballInfo.getId() == clientId) {
+                info = ballInfo;
+                break;
+            }
+        }
+        if (info != null) {
+            ballInfos.removeValue(info,false);
         }
     }
 
@@ -33,18 +55,18 @@ public class GameWorld {
 
     public void update(float delta){
         time += delta;
-        while (time >= Constant.BALL_MOVE_INTERVAL_SECONDS) {
-            time -= Constant.BALL_MOVE_INTERVAL_SECONDS;
-            for (GameBallInfo gameBallInfo : ballInfos) {
-                gameBallInfo.setPosition(gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY());
-                gameBallInfo.setTarget(randomPosition(), randomPosition());
-            }
-        }
-
-        float progress = time / Constant.BALL_MOVE_INTERVAL_SECONDS;
-        for (GameBallInfo gameBallInfo : ballInfos) {
-            gameBallInfo.calBallCurrentPos(progress);
-        }
+//        while (time >= Constant.BALL_MOVE_INTERVAL_SECONDS) {
+//            time -= Constant.BALL_MOVE_INTERVAL_SECONDS;
+//            for (GameBallInfo gameBallInfo : ballInfos) {
+//                gameBallInfo.setPosition(gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY());
+//                gameBallInfo.setTarget(randomPosition(), randomPosition());
+//            }
+//        }
+//
+//        float progress = time / Constant.BALL_MOVE_INTERVAL_SECONDS;
+//        for (GameBallInfo gameBallInfo : ballInfos) {
+//            gameBallInfo.calBallCurrentPos(progress);
+//        }
     }
 
     private float randomPosition() {

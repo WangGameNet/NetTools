@@ -6,9 +6,17 @@ import java.util.ArrayList;
 
 public class BallInitMessage extends Message {
     private ArrayList<BallInfo> positions;
-
+    private int uid;
     public BallInitMessage(){
         this.positions = new ArrayList<>();
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
     }
 
     public void setPositions(ArrayList<BallInfo> positions) {

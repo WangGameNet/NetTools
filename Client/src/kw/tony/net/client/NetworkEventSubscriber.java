@@ -1,6 +1,7 @@
 package kw.tony.net.client;
 
 import kw.tony.net.client.event.InitialWorldStateEvent;
+import kw.tony.net.client.event.RemoveIdEvent;
 import kw.tony.net.client.event.TestMessageEvent;
 import kw.tony.net.client.event.WorldSnapshotEvent;
 
@@ -21,5 +22,9 @@ public interface NetworkEventSubscriber {
     }
 
     default void onTestMessage(TestMessageEvent testMessageEvent) {
+    }
+
+    default void onRemoveMessage(RemoveIdEvent removeIdEvent){
+
     }
 }
