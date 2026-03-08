@@ -70,7 +70,7 @@ public class ServerManager implements ServerNetworkSubscriber {
     }
 
     private void broadcastSnapshot() {
-        serverNetworkService.broadcastWorldSnapshot(new WorldSnapshot(++snapshotId, copyBallStates()));
+        serverNetworkService.broadcastWorldSnapshot(new WorldSnapshot(++snapshotId % 1000, copyBallStates()));
     }
 
     private List<BallState> copyBallStates() {
