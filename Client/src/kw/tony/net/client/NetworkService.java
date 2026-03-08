@@ -1,6 +1,7 @@
 package kw.tony.net.client;
 
 import com.esotericsoftware.kryonet.Client;
+import com.esotericsoftware.kryonet.Connection;
 import kw.tony.net.client.event.*;
 import kw.tony.net.client.listener.ClientListener;
 import kw.tony.shared.constant.Constant;
@@ -36,6 +37,7 @@ public class NetworkService {
 
     private volatile ConnectionLifecycleState connectionLifecycleState = ConnectionLifecycleState.IDLE;
     private volatile boolean running;
+    private volatile int clientId;
 
     public NetworkService() {
         this.client = new Client();
@@ -47,6 +49,10 @@ public class NetworkService {
         this.subscribers = new CopyOnWriteArraySet<NetworkEventSubscriber>();
         ClassRegister.register(client.getKryo());
         client.addListener(clientListener);
+    }
+
+    public int getClientId() {
+        return clientId;
     }
 
     public void start() {
@@ -90,7 +96,15 @@ public class NetworkService {
     }
 
     public void sendReliable(Object message) {
-        client.sendTCP(message);
+        if (message instanceof BallSnapshot){
+            BallSnapshot ballSnapshot = (BallSnapshot) (message);
+            BallInfo ballInfo = new BallInfo();
+            ballInfo.setBallId(ballSnapshot.getBallId());
+            ballInfo.setPosx(ballSnapshot.getX());
+            ballInfo.setPosy(ballSnapshot.getY());
+            client.sendTCP(ballInfo);
+        }
+
     }
 
     public void dispose() {
@@ -121,7 +135,8 @@ public class NetworkService {
         connect();
     }
 
-    public void onConnected() {
+    public void onConnected(Connection connection) {
+        this.clientId = connection.getID();
         updateConnectionState(ConnectionLifecycleState.CONNECTED);
         notifyConnected();
     }

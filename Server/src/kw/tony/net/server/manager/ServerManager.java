@@ -7,6 +7,7 @@ import kw.tony.net.server.ball.GameBallInfo;
 import kw.tony.net.server.event.*;
 import kw.tony.net.server.game.GameWorld;
 import kw.tony.shared.constant.Constant;
+import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.RemoveMessage;
 
 import java.util.ArrayList;
@@ -68,6 +69,13 @@ public class ServerManager implements ServerNetworkSubscriber {
                 clientTestMessageReceivedEvent.getValue(),
                 "xxxxxxxxx"
         ));
+    }
+
+    @Override
+    public void onSendBallMessage(Object event) {
+        BallInfo ballInfo = (BallInfo) event;
+        BallState ballState = new BallState(ballInfo.getBallId(), ballInfo.getPosx(),ballInfo.getPosy());
+        gameWorld.updateBallPos(ballState);
     }
 
     private void broadcastSnapshot() {

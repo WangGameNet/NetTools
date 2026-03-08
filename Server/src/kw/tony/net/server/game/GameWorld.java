@@ -2,6 +2,7 @@ package kw.tony.net.server.game;
 
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
+import kw.tony.net.server.event.BallState;
 
 public class GameWorld {
     private Array<GameBallInfo> ballInfos;
@@ -71,5 +72,19 @@ public class GameWorld {
 
     private float randomPosition() {
         return (float) (Math.random() * 720);
+    }
+
+    public void updateBallPos(BallState ballState) {
+        System.out.println("-----------------------");
+        for (GameBallInfo ballInfo : ballInfos) {
+            if (ballInfo.getId() == ballState.getBallId()) {
+
+                System.out.println(ballInfo.getCurrentX()+"   "+ballInfo.getCurrentY());
+                System.out.println(ballState.getX()+"   "+ballState.getY());
+                ballInfo.setCurrentX(ballState.getX());
+                ballInfo.setCurrentY(ballState.getY());
+
+            }
+        }
     }
 }

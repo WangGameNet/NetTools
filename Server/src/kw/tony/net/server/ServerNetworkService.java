@@ -149,6 +149,13 @@ public class ServerNetworkService {
                 subscriber.onTestMessageReceived(clientTestMessageReceivedEvent);
             }
         }
+
+        System.out.println(event);
+        if (event instanceof BallInfo){
+            for (ServerNetworkSubscriber subscriber : subscribers) {
+                subscriber.onSendBallMessage(event);
+            }
+        }
     }
 
     private ArrayList<BallInfo> toBallInfos(List<BallState> ballStates) {

@@ -1,10 +1,14 @@
 package com.tony.game.screen;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import com.kw.gdx.BaseGame;
 import com.kw.gdx.asset.Asset;
 import com.kw.gdx.screen.BaseScreen;
+import com.tony.game.block.BlockActor;
 import kw.tony.net.client.NetworkEventSubscriber;
 import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
@@ -29,6 +33,38 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
         super.show();
         networkService = resolveNetworkService();
         networkService.subscribe(this);
+
+        stage.addListener(new ClickListener(){
+
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                int clientId = networkService.getClientId();
+                BallSnapshot ballSnapshot = new BallSnapshot(clientId,x,y);
+                LoadScreen.this.getNetworkService().sendReliable(ballSnapshot);
+                return super.touchDown(event, x, y, pointer, button);
+            }
+
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                super.touchDragged(event, x, y, pointer);
+                int clientId = networkService.getClientId();
+                BallSnapshot ballSnapshot = new BallSnapshot(clientId,x,y);
+                LoadScreen.this.getNetworkService().sendReliable(ballSnapshot);
+            }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                super.touchUp(event, x, y, pointer, button);
+                int clientId = networkService.getClientId();
+                BallSnapshot ballSnapshot = new BallSnapshot(clientId,x,y);
+                LoadScreen.this.getNetworkService().sendReliable(ballSnapshot);
+
+            }
+        });
+    }
+
+    private NetworkService getNetworkService() {
+        return networkService;
     }
 
     @Override
@@ -114,7 +150,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
             return ballRenderState;
         }
 
-        Image image = new Image(Asset.getAsset().getTexture("white.png"));
+        BlockActor image = new BlockActor();
         addActor(image);
         ballRenderState = new BallRenderState(image, x, y);
         ballStates.put(ballId, ballRenderState);
@@ -138,7 +174,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     }
 
     private static class BallRenderState {
-        private final Image image;
+        private final BlockActor image;
         private float startX;
         private float startY;
         private float targetX;
@@ -146,7 +182,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
         private float elapsed;
         private float duration;
 
-        private BallRenderState(Image image, float x, float y) {
+        private BallRenderState(BlockActor image, float x, float y) {
             this.image = image;
             snapTo(x, y);
         }

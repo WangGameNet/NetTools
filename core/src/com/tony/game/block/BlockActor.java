@@ -18,4 +18,8 @@ public class BlockActor extends Group {
     public void hit(){
 
     }
+
+    public void updatePosition(float x, float y) {
+
+    }
 }

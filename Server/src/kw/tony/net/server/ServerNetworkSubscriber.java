@@ -13,4 +13,6 @@ public interface ServerNetworkSubscriber {
 
     default void onTestMessageReceived(ClientTestMessageReceivedEvent clientTestMessageReceivedEvent) {
     }
+
+    default void onSendBallMessage(Object event){}
 }
