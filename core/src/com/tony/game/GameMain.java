@@ -5,6 +5,7 @@ import com.kw.gdx.BaseGame;
 import com.kw.gdx.constant.Constant;
 import com.kw.gdx.resource.annotation.GameInfo;
 import com.kw.gdx.utils.log.NLog;
+import com.tony.game.screen.ConnectScreen;
 import com.tony.game.screen.LoadScreen;
 import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
@@ -35,7 +36,7 @@ public class GameMain extends BaseGame implements NetworkServiceProvider {
     @Override
     protected void loadingView() {
         super.loadingView();
-        setScreen(LoadScreen.class);
+        setScreen(ConnectScreen.class);
     }
 
     @Override

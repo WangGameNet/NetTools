@@ -1,5 +1,7 @@
 package kw.tony.shared.constant.bean;
 
+import com.badlogic.gdx.math.Vector2;
+
 public class BallInfo {
     private int ballId;
     private float posx;

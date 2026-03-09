@@ -63,6 +63,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     public void onDisconnected() {
         resetBallStates();
         lastSnapshotId = -1L;
+        setScreen(ConnectScreen.class);
     }
 
     @Override
