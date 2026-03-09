@@ -3,6 +3,7 @@ package kw.tony.net.server.game;
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
 import kw.tony.net.server.event.ClientConnectedEvent;
+import kw.tony.net.server.event.ClientDisconnectedEvent;
 import kw.tony.shared.constant.Constant;
 
 public class GameWorld {
@@ -60,5 +61,18 @@ public class GameWorld {
         gameBallInfo.setPosition(startX, startY);
         gameBallInfo.setTarget(startX, startY);
         ballInfos.add(gameBallInfo);
+    }
+
+    public void removeBall(ClientDisconnectedEvent clientDisconnectedEvent) {
+        GameBallInfo info = null;
+        for (GameBallInfo ballInfo : ballInfos) {
+            if (ballInfo.getId() == clientDisconnectedEvent.getClientId()) {
+                info = ballInfo;
+                break;
+            }
+        }
+        if (info!=null) {
+            ballInfos.removeValue(info, false);
+        }
     }
 }

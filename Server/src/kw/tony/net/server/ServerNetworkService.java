@@ -13,6 +13,7 @@ import kw.tony.net.server.listener.ServerListener;
 import kw.tony.shared.constant.Constant;
 import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.RemoveMessage;
 import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 import kw.tony.shared.constant.register.ClassRegister;
@@ -99,6 +100,12 @@ public class ServerNetworkService {
         worldMessage.setSnapshotId(worldSnapshot.getSnapshotId());
         worldMessage.setPositions(toBallInfos(worldSnapshot.getBalls()));
         server.sendToAllUDP(worldMessage);
+    }
+
+    public void sendRemoveBallState(int clientId){
+        RemoveMessage message = new RemoveMessage();
+        message.setClientId(clientId);
+        server.sendToAllTCP(message);
     }
 
     public void broadcastTestMessage(TestMessagePayload testMessagePayload) {

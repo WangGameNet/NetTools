@@ -1,11 +1,6 @@
 package kw.tony.net.client;
 
-import kw.tony.net.client.event.AvailableServersChangedEvent;
-import kw.tony.net.client.event.ConnectionFailedEvent;
-import kw.tony.net.client.event.DiscoveredServer;
-import kw.tony.net.client.event.InitialWorldStateEvent;
-import kw.tony.net.client.event.TestMessageEvent;
-import kw.tony.net.client.event.WorldSnapshotEvent;
+import kw.tony.net.client.event.*;
 
 public interface NetworkEventSubscriber {
     default void onAvailableServersChanged(AvailableServersChangedEvent availableServersChangedEvent) {
@@ -34,4 +29,6 @@ public interface NetworkEventSubscriber {
 
     default void onTestMessage(TestMessageEvent testMessageEvent) {
     }
+
+    default void onRemoveMessage(RemoveMessageEvent removeMessageEvent){}
 }

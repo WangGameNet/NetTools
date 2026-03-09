@@ -2,17 +2,12 @@ package kw.tony.net.client;
 
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
-import kw.tony.net.client.event.AvailableServersChangedEvent;
-import kw.tony.net.client.event.BallSnapshot;
-import kw.tony.net.client.event.ConnectionFailedEvent;
-import kw.tony.net.client.event.DiscoveredServer;
-import kw.tony.net.client.event.InitialWorldStateEvent;
-import kw.tony.net.client.event.TestMessageEvent;
-import kw.tony.net.client.event.WorldSnapshotEvent;
+import kw.tony.net.client.event.*;
 import kw.tony.net.client.listener.ClientListener;
 import kw.tony.shared.constant.Constant;
 import kw.tony.shared.constant.bean.BallInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
+import kw.tony.shared.constant.message.RemoveMessage;
 import kw.tony.shared.constant.message.TestMesssage;
 import kw.tony.shared.constant.message.WorldMessage;
 import kw.tony.shared.constant.register.ClassRegister;
@@ -249,12 +244,23 @@ public class NetworkService {
             }
             return;
         }
-
+        System.out.println(event+"-----------------------");
         if (event instanceof TestMesssage) {
             TestMessageEvent testMessageEvent = toTestMessageEvent((TestMesssage) event);
             for (NetworkEventSubscriber subscriber : subscribers) {
                 subscriber.onTestMessage(testMessageEvent);
             }
+            return;
+        }
+
+        if (event instanceof RemoveMessage){
+            int clientId = ((RemoveMessage) (event)).getClientId();
+            RemoveMessageEvent removeMessageEvent = new RemoveMessageEvent();
+            removeMessageEvent.setClientId(clientId);
+            for (NetworkEventSubscriber subscriber : subscribers) {
+                subscriber.onRemoveMessage(removeMessageEvent);
+            }
+            return;
         }
     }
 

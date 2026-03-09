@@ -60,6 +60,8 @@ public class ServerManager implements ServerNetworkSubscriber {
     @Override
     public void onClientDisconnected(ClientDisconnectedEvent clientDisconnectedEvent) {
         // Reserved for future session cleanup.
+        gameWorld.removeBall(clientDisconnectedEvent);
+        serverNetworkService.sendRemoveBallState(clientDisconnectedEvent.getClientId());
     }
 
     @Override

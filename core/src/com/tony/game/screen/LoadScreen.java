@@ -2,17 +2,16 @@ package com.tony.game.screen;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.kw.gdx.BaseGame;
 import com.kw.gdx.asset.Asset;
 import com.kw.gdx.screen.BaseScreen;
 import kw.tony.net.client.NetworkEventSubscriber;
 import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
-import kw.tony.net.client.event.BallSnapshot;
-import kw.tony.net.client.event.InitialWorldStateEvent;
-import kw.tony.net.client.event.TestMessageEvent;
-import kw.tony.net.client.event.WorldSnapshotEvent;
+import kw.tony.net.client.event.*;
 import kw.tony.shared.constant.Constant;
 
 import java.util.HashMap;
@@ -22,6 +21,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     private final Map<Integer, BallRenderState> ballStates;
     private NetworkService networkService;
     private long lastSnapshotId = -1L;
+    private Image image;
 
     public LoadScreen(BaseGame game) {
         super(game);
@@ -33,6 +33,32 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
         super.show();
         networkService = resolveNetworkService();
         networkService.subscribe(this);
+
+
+
+        image = new Image(Asset.getAsset().getTexture("white.png"));
+        addActor(image);
+        image.setSize(200,200);
+
+        stage.addListener(new ClickListener(){
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                image.setPosition(x,y);
+                return super.touchDown(event, x, y, pointer, button);
+            }
+
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                super.touchDragged(event, x, y, pointer);
+                image.setPosition(x,y);
+            }
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                super.clicked(event, x, y);
+                image.setPosition(x,y);
+            }
+        });
     }
 
     @Override
@@ -98,6 +124,13 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
     @Override
     public void onTestMessage(TestMessageEvent testMessageEvent) {
         // Reserved for future reliable UI events.
+    }
+
+    @Override
+    public void onRemoveMessage(RemoveMessageEvent removeMessageEvent) {
+        BallRenderState ballRenderState = ballStates.get(removeMessageEvent.getClientId());
+        ballRenderState.image.remove();
+        ballStates.remove(removeMessageEvent.getClientId());
     }
 
     private void updateBallInterpolation(float delta) {
