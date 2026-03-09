@@ -30,7 +30,6 @@ public class ServerNetworkService {
     private final ServerDiscoveryService serverDiscoveryService;
     private final ConcurrentLinkedQueue<Object> inboundEventQueue;
     private final Set<ServerNetworkSubscriber> subscribers;
-
     private volatile boolean running;
 
     public ServerNetworkService() {

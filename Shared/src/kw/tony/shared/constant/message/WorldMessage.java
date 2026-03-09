@@ -4,6 +4,9 @@ import kw.tony.shared.constant.bean.BallInfo;
 
 import java.util.ArrayList;
 
+/**
+ * 世界消息
+ */
 public class WorldMessage {
     private long snapshotId;
     private ArrayList<BallInfo> positions;

@@ -1,5 +1,6 @@
 package com.tony.game.screen;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.kw.gdx.BaseGame;
@@ -57,6 +58,7 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
 
     @Override
     public void onConnected() {
+
     }
 
     @Override
@@ -114,6 +116,9 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
         addActor(image);
         ballRenderState = new BallRenderState(image, x, y);
         ballStates.put(ballId, ballRenderState);
+        if (ballId == networkService.getClientId()){
+            image.setColor(Color.RED);
+        }
         return ballRenderState;
     }
 

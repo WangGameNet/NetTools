@@ -15,14 +15,12 @@ public class ServerListener implements Listener {
     @Override
     public void connected(Connection connection) {
         Listener.super.connected(connection);
-        NLog.i("=========server ===== connected");
         serverNetworkService.onClientConnected(connection);
     }
 
     @Override
     public void disconnected(Connection connection) {
         Listener.super.disconnected(connection);
-        NLog.i("=========server ===== disconnected");
         serverNetworkService.onClientDisconnected(connection);
     }
 

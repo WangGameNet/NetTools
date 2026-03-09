@@ -1,6 +1,7 @@
 package kw.tony.net.client;
 
 import com.esotericsoftware.kryonet.Client;
+import com.esotericsoftware.kryonet.Connection;
 import kw.tony.net.client.event.AvailableServersChangedEvent;
 import kw.tony.net.client.event.BallSnapshot;
 import kw.tony.net.client.event.ConnectionFailedEvent;
@@ -58,6 +59,7 @@ public class NetworkService {
     private volatile InitialWorldStateEvent currentInitialWorldStateEvent;
     private volatile WorldSnapshotEvent currentWorldSnapshotEvent;
     private volatile ConnectionFailedEvent lastConnectionFailedEvent;
+    private int clientId;
 
     public NetworkService() {
         this.client = new Client();
@@ -208,7 +210,8 @@ public class NetworkService {
         eventQueue.offer(new ConnectionStateEvent(ConnectionLifecycleState.DISCONNECTED, requestedServer));
     }
 
-    public void onConnected() {
+    public void onConnected(Connection connection) {
+        this.clientId = connection.getID();
         lastConnectionFailedEvent = null;
         eventQueue.offer(new ConnectionStateEvent(ConnectionLifecycleState.CONNECTED, requestedServer));
     }
@@ -402,6 +405,10 @@ public class NetworkService {
             ballSnapshots.add(new BallSnapshot(ballInfo.getBallId(), ballInfo.getPosx(), ballInfo.getPosy()));
         }
         return Collections.unmodifiableList(ballSnapshots);
+    }
+
+    public int getClientId() {
+        return clientId;
     }
 
     private static class ConnectionStateEvent {

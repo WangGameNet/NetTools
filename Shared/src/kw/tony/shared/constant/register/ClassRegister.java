@@ -10,10 +10,11 @@ import java.util.ArrayList;
 
 public class ClassRegister {
     public static void register(Kryo kryo){
-        kryo.register(TestMesssage.class);
-        kryo.register(WorldMessage.class);
         kryo.register(ArrayList.class);
         kryo.register(BallInfo.class);
+
+        kryo.register(TestMesssage.class);
+        kryo.register(WorldMessage.class);
         kryo.register(BallInitMessage.class);
 
     }

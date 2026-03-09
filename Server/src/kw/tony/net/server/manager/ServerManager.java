@@ -50,6 +50,7 @@ public class ServerManager implements ServerNetworkSubscriber {
 
     @Override
     public void onClientConnected(ClientConnectedEvent clientConnectedEvent) {
+        gameWorld.createBall(clientConnectedEvent);
         serverNetworkService.sendInitialWorldState(
                 clientConnectedEvent.getClientId(),
                 new InitialWorldState(copyBallStates())

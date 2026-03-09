@@ -2,6 +2,7 @@ package kw.tony.net.server.game;
 
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
+import kw.tony.net.server.event.ClientConnectedEvent;
 import kw.tony.shared.constant.Constant;
 
 public class GameWorld {
@@ -16,15 +17,15 @@ public class GameWorld {
      * init  ball
      */
     public void startGame(){
-        for (int i = 0; i < 10; i++) {
-            GameBallInfo gameBallInfo = new GameBallInfo();
-            gameBallInfo.setId(i);
-            float startX = randomPosition();
-            float startY = randomPosition();
-            gameBallInfo.setPosition(startX, startY);
-            gameBallInfo.setTarget(startX, startY);
-            ballInfos.add(gameBallInfo);
-        }
+//        for (int i = 0; i < 10; i++) {
+//            GameBallInfo gameBallInfo = new GameBallInfo();
+//            gameBallInfo.setId(i);
+//            float startX = randomPosition();
+//            float startY = randomPosition();
+//            gameBallInfo.setPosition(startX, startY);
+//            gameBallInfo.setTarget(startX, startY);
+//            ballInfos.add(gameBallInfo);
+//        }
     }
 
     public Array<GameBallInfo> getBallInfos() {
@@ -49,5 +50,15 @@ public class GameWorld {
 
     private float randomPosition() {
         return (float) (Math.random() * 720);
+    }
+
+    public void createBall(ClientConnectedEvent clientConnectedEvent) {
+        GameBallInfo gameBallInfo = new GameBallInfo();
+        gameBallInfo.setId(clientConnectedEvent.getClientId());
+        float startX = randomPosition();
+        float startY = randomPosition();
+        gameBallInfo.setPosition(startX, startY);
+        gameBallInfo.setTarget(startX, startY);
+        ballInfos.add(gameBallInfo);
     }
 }
