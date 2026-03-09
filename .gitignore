@@ -18,5 +18,6 @@ gdx-box2d/build/
 error/
 Client/build/
 Shared/build/
+Server/build/
 
 
