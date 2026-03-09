@@ -3,7 +3,6 @@ sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../android/assets"]
 sourceCompatibility = 1.8
 
-
 dependencies {
     implementation "com.github.crykn:kryonet:2.22.9"
     implementation project(":libGdxLib")
