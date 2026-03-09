@@ -2,6 +2,7 @@ package kw.tony.net.server.game;
 
 import com.badlogic.gdx.utils.Array;
 import kw.tony.net.server.ball.GameBallInfo;
+import kw.tony.net.server.event.BallState;
 import kw.tony.net.server.event.ClientConnectedEvent;
 import kw.tony.net.server.event.ClientDisconnectedEvent;
 import kw.tony.shared.constant.Constant;
@@ -35,18 +36,18 @@ public class GameWorld {
 
     public void update(float delta){
         time += delta;
-        while (time >= Constant.BALL_MOVE_INTERVAL_SECONDS) {
-            time -= Constant.BALL_MOVE_INTERVAL_SECONDS;
-            for (GameBallInfo gameBallInfo : ballInfos) {
-                gameBallInfo.setPosition(gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY());
-                gameBallInfo.setTarget(randomPosition(), randomPosition());
-            }
-        }
-
-        float progress = time / Constant.BALL_MOVE_INTERVAL_SECONDS;
-        for (GameBallInfo gameBallInfo : ballInfos) {
-            gameBallInfo.calBallCurrentPos(progress);
-        }
+//        while (time >= Constant.BALL_MOVE_INTERVAL_SECONDS) {
+//            time -= Constant.BALL_MOVE_INTERVAL_SECONDS;
+//            for (GameBallInfo gameBallInfo : ballInfos) {
+//                gameBallInfo.setPosition(gameBallInfo.getCurrentX(), gameBallInfo.getCurrentY());
+//                gameBallInfo.setTarget(randomPosition(), randomPosition());
+//            }
+//        }
+//
+//        float progress = time / Constant.BALL_MOVE_INTERVAL_SECONDS;
+//        for (GameBallInfo gameBallInfo : ballInfos) {
+//            gameBallInfo.calBallCurrentPos(progress);
+//        }
     }
 
     private float randomPosition() {
@@ -73,6 +74,15 @@ public class GameWorld {
         }
         if (info!=null) {
             ballInfos.removeValue(info, false);
+        }
+    }
+
+    public void updateBallPos(BallState event) {
+        for (GameBallInfo ballInfo : ballInfos) {
+            if (ballInfo.getId() == event.getBallId()) {
+                ballInfo.setCurrentX(event.getX());
+                ballInfo.setCurrentY(event.getY());
+            }
         }
     }
 }

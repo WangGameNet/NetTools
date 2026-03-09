@@ -131,6 +131,14 @@ public class ServerNetworkService {
                     testMesssage.getValue(),
                     testMesssage.getName()
             ));
+            return;
+        }
+
+        if (object instanceof BallInfo){
+            BallInfo info = (BallInfo) object;
+            BallState ballState = new BallState(info.getBallId(),info.getPosx(),info.getPosy());
+            inboundEventQueue.offer(ballState);
+            return;
         }
     }
 
@@ -156,7 +164,16 @@ public class ServerNetworkService {
             for (ServerNetworkSubscriber subscriber : subscribers) {
                 subscriber.onTestMessageReceived(clientTestMessageReceivedEvent);
             }
+            return;
         }
+
+        if (event instanceof BallState){
+            for (ServerNetworkSubscriber subscriber : subscribers) {
+                subscriber.onUpdateBallPos((BallState)event);
+            }
+        }
+
+
     }
 
     private ArrayList<BallInfo> toBallInfos(List<BallState> ballStates) {

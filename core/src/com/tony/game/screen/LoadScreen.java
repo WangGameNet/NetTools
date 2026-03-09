@@ -13,6 +13,7 @@ import kw.tony.net.client.NetworkService;
 import kw.tony.net.client.NetworkServiceProvider;
 import kw.tony.net.client.event.*;
 import kw.tony.shared.constant.Constant;
+import kw.tony.shared.constant.bean.BallInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,12 +45,22 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 image.setPosition(x,y);
+                BallInfo ballInfo = new BallInfo();
+                ballInfo.setPosx(x);
+                ballInfo.setPosy(y);
+                ballInfo.setBallId(networkService.getClientId());
+                networkService.sendReliable(ballInfo);
                 return super.touchDown(event, x, y, pointer, button);
             }
 
             @Override
             public void touchDragged(InputEvent event, float x, float y, int pointer) {
                 super.touchDragged(event, x, y, pointer);
+                BallInfo ballInfo = new BallInfo();
+                ballInfo.setPosx(x);
+                ballInfo.setPosy(y);
+                ballInfo.setBallId(networkService.getClientId());
+                networkService.sendReliable(ballInfo);
                 image.setPosition(x,y);
             }
 
@@ -57,6 +68,11 @@ public class LoadScreen extends BaseScreen implements NetworkEventSubscriber {
             public void clicked(InputEvent event, float x, float y) {
                 super.clicked(event, x, y);
                 image.setPosition(x,y);
+                BallInfo ballInfo = new BallInfo();
+                ballInfo.setPosx(x);
+                ballInfo.setPosy(y);
+                ballInfo.setBallId(networkService.getClientId());
+                networkService.sendReliable(ballInfo);
             }
         });
     }

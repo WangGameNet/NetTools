@@ -88,4 +88,9 @@ public class ServerManager implements ServerNetworkSubscriber {
         }
         return Collections.unmodifiableList(ballStates);
     }
+
+    @Override
+    public void onUpdateBallPos(BallState event) {
+        gameWorld.updateBallPos(event);
+    }
 }
