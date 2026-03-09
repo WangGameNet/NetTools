@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class ServerNetworkService {
     private final Server server;
     private final ServerListener serverListener;
+    private final ServerDiscoveryService serverDiscoveryService;
     private final ConcurrentLinkedQueue<Object> inboundEventQueue;
     private final Set<ServerNetworkSubscriber> subscribers;
 
@@ -35,6 +36,7 @@ public class ServerNetworkService {
     public ServerNetworkService() {
         this.server = new Server();
         this.serverListener = new ServerListener(this);
+        this.serverDiscoveryService = new ServerDiscoveryService();
         this.inboundEventQueue = new ConcurrentLinkedQueue<Object>();
         this.subscribers = new CopyOnWriteArraySet<ServerNetworkSubscriber>();
         ClassRegister.register(server.getKryo());
@@ -48,6 +50,7 @@ public class ServerNetworkService {
 
         running = true;
         server.start();
+        serverDiscoveryService.start();
         try {
             server.bind(Constant.TCP_PORT, Constant.UDP_PORT);
         } catch (IOException e) {
@@ -59,6 +62,7 @@ public class ServerNetworkService {
         running = false;
         inboundEventQueue.clear();
         subscribers.clear();
+        serverDiscoveryService.stop();
         server.stop();
     }
 
