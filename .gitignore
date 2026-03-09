@@ -16,6 +16,7 @@ android/ic_launcher-web.png
 gdx-box2d/build/
 /gdx-box2d/build/
 error/
-
+Client/build/
+Shared/build/
 
 
