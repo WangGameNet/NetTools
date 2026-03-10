@@ -6,6 +6,8 @@ import kw.tony.net.client.event.*;
 import kw.tony.net.client.listener.ClientListener;
 import kw.tony.shared.constant.Constant;
 import kw.tony.shared.constant.bean.BallInfo;
+import kw.tony.shared.constant.bean.CollectibleInfo;
+import kw.tony.shared.constant.bean.ScoreInfo;
 import kw.tony.shared.constant.message.BallInitMessage;
 import kw.tony.shared.constant.message.RemoveMessage;
 import kw.tony.shared.constant.message.TestMesssage;
@@ -180,7 +182,17 @@ public class NetworkService {
     }
 
     public void sendReliable(Object message) {
+        if (!client.isConnected()) {
+            return;
+        }
         client.sendTCP(message);
+    }
+
+    public void sendUnreliable(Object message) {
+        if (!client.isConnected()) {
+            return;
+        }
+        client.sendUDP(message);
     }
 
     public void dispose() {
@@ -394,11 +406,20 @@ public class NetworkService {
     }
 
     private InitialWorldStateEvent toInitialWorldStateEvent(BallInitMessage ballInitMessage) {
-        return new InitialWorldStateEvent(toBallSnapshots(ballInitMessage.getPositions()));
+        return new InitialWorldStateEvent(
+                toBallSnapshots(ballInitMessage.getPositions()),
+                toCollectibleSnapshots(ballInitMessage.getCollectibles()),
+                toPlayerScoreSnapshots(ballInitMessage.getScores())
+        );
     }
 
     private WorldSnapshotEvent toWorldSnapshotEvent(WorldMessage worldMessage) {
-        return new WorldSnapshotEvent(worldMessage.getSnapshotId(), toBallSnapshots(worldMessage.getPositions()));
+        return new WorldSnapshotEvent(
+                worldMessage.getSnapshotId(),
+                toBallSnapshots(worldMessage.getPositions()),
+                toCollectibleSnapshots(worldMessage.getCollectibles()),
+                toPlayerScoreSnapshots(worldMessage.getScores())
+        );
     }
 
     private TestMessageEvent toTestMessageEvent(TestMesssage testMesssage) {
@@ -411,6 +432,26 @@ public class NetworkService {
             ballSnapshots.add(new BallSnapshot(ballInfo.getBallId(), ballInfo.getPosx(), ballInfo.getPosy()));
         }
         return Collections.unmodifiableList(ballSnapshots);
+    }
+
+    private List<CollectibleSnapshot> toCollectibleSnapshots(List<CollectibleInfo> collectibleInfos) {
+        ArrayList<CollectibleSnapshot> collectibleSnapshots = new ArrayList<CollectibleSnapshot>(collectibleInfos.size());
+        for (CollectibleInfo collectibleInfo : collectibleInfos) {
+            collectibleSnapshots.add(new CollectibleSnapshot(
+                    collectibleInfo.getCollectibleId(),
+                    collectibleInfo.getPosx(),
+                    collectibleInfo.getPosy()
+            ));
+        }
+        return Collections.unmodifiableList(collectibleSnapshots);
+    }
+
+    private List<PlayerScoreSnapshot> toPlayerScoreSnapshots(List<ScoreInfo> scoreInfos) {
+        ArrayList<PlayerScoreSnapshot> playerScoreSnapshots = new ArrayList<PlayerScoreSnapshot>(scoreInfos.size());
+        for (ScoreInfo scoreInfo : scoreInfos) {
+            playerScoreSnapshots.add(new PlayerScoreSnapshot(scoreInfo.getPlayerId(), scoreInfo.getScore()));
+        }
+        return Collections.unmodifiableList(playerScoreSnapshots);
     }
 
     public int getClientId() {

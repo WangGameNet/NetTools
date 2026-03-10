@@ -8,15 +8,19 @@ import kw.tony.net.server.event.BallState;
 import kw.tony.net.server.event.ClientConnectedEvent;
 import kw.tony.net.server.event.ClientDisconnectedEvent;
 import kw.tony.net.server.event.ClientTestMessageReceivedEvent;
+import kw.tony.net.server.event.CollectibleState;
 import kw.tony.net.server.event.InitialWorldState;
+import kw.tony.net.server.event.PlayerScoreState;
 import kw.tony.net.server.event.TestMessagePayload;
 import kw.tony.net.server.event.WorldSnapshot;
+import kw.tony.net.server.game.GameCollectibleInfo;
 import kw.tony.net.server.game.GameWorld;
 import kw.tony.shared.constant.Constant;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class ServerManager implements ServerNetworkSubscriber {
     private final ServerNetworkService serverNetworkService;
@@ -53,7 +57,7 @@ public class ServerManager implements ServerNetworkSubscriber {
         gameWorld.createBall(clientConnectedEvent);
         serverNetworkService.sendInitialWorldState(
                 clientConnectedEvent.getClientId(),
-                new InitialWorldState(copyBallStates())
+                new InitialWorldState(copyBallStates(), copyCollectibleStates(), copyScoreStates())
         );
     }
 
@@ -73,7 +77,9 @@ public class ServerManager implements ServerNetworkSubscriber {
     }
 
     private void broadcastSnapshot() {
-        serverNetworkService.broadcastWorldSnapshot(new WorldSnapshot(++snapshotId, copyBallStates()));
+        serverNetworkService.broadcastWorldSnapshot(
+                new WorldSnapshot(++snapshotId, copyBallStates(), copyCollectibleStates(), copyScoreStates())
+        );
     }
 
     private List<BallState> copyBallStates() {
@@ -87,6 +93,28 @@ public class ServerManager implements ServerNetworkSubscriber {
             ));
         }
         return Collections.unmodifiableList(ballStates);
+    }
+
+    private List<CollectibleState> copyCollectibleStates() {
+        Array<GameCollectibleInfo> gameCollectibleInfos = gameWorld.getCollectibleInfos();
+        ArrayList<CollectibleState> collectibleStates = new ArrayList<CollectibleState>(gameCollectibleInfos.size);
+        for (GameCollectibleInfo collectibleInfo : gameCollectibleInfos) {
+            collectibleStates.add(new CollectibleState(
+                    collectibleInfo.getId(),
+                    collectibleInfo.getX(),
+                    collectibleInfo.getY()
+            ));
+        }
+        return Collections.unmodifiableList(collectibleStates);
+    }
+
+    private List<PlayerScoreState> copyScoreStates() {
+        Map<Integer, Integer> scores = gameWorld.getPlayerScores();
+        ArrayList<PlayerScoreState> scoreStates = new ArrayList<PlayerScoreState>(scores.size());
+        for (Map.Entry<Integer, Integer> entry : scores.entrySet()) {
+            scoreStates.add(new PlayerScoreState(entry.getKey(), entry.getValue()));
+        }
+        return Collections.unmodifiableList(scoreStates);
     }
 
     @Override
